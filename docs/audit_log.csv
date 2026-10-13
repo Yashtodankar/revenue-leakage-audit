@@ -1,0 +1,8 @@
+step,rows_affected
+delivery before purchase (nulled),0
+duplicates dropped: orders,0
+duplicates dropped: items,0
+duplicates dropped: cust,0
+duplicates dropped: prod,0
+invalid price/freight rows removed,0
+products with no category,623
