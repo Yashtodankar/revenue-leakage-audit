@@ -22,7 +22,7 @@ FROM order_items oi JOIN products p ON p.product_id = oi.product_id
 GROUP BY p.category ORDER BY leakage_rank LIMIT 15;
 
 -- Q4. Top 10 loss-making products
-SELECT oi.product_id, p.category, COUNT(*) line_items_itemss, ROUND(SUM(oi.net_revenue)) revenue, ROUND(SUM(oi.gross_profit)) profit
+SELECT oi.product_id, p.category, COUNT(*) line_items, ROUND(SUM(oi.net_revenue)) revenue, ROUND(SUM(oi.gross_profit)) profit
 FROM order_items oi JOIN products p ON p.product_id = oi.product_id
 GROUP BY oi.product_id, p.category HAVING SUM(oi.gross_profit) < 0
 ORDER BY profit LIMIT 10;
