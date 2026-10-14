@@ -1,0 +1,244 @@
+-- Q1. Overall KPIs and leakage
+ orders  gross_rev  discounts    net_rev  product_cost  shipping  refunds   profit  margin_pct   leakage  leakage_pct
+  98666 13736429.0   457031.0 13279397.0     9615432.0 2251910.0 719502.0 692554.0        5.22 1524996.0         11.1
+
+-- Q2. Leakage composition: discount vs refund vs excess freight
+     leak_type   amount
+      Discount 457031.0
+        Refund 719502.0
+Excess freight 348462.0
+
+-- Q3. Categories ranked by leakage (RANK)
+             category   revenue  leakage  leakage_pct  leakage_rank
+        Watches Gifts 1178988.0 122418.0         10.0             1
+       Bed Bath Table 1005595.0 118238.0         11.3             2
+        Health Beauty 1238360.0 114302.0          9.0             3
+       Sports Leisure  965966.0 108628.0         10.9             4
+Computers Accessories  894493.0  98703.0         10.7             5
+      Furniture Decor  710244.0  98155.0         13.3             6
+           Housewares  610878.0  84748.0         13.3             7
+                 Auto  579393.0  82540.0         13.9             8
+           Cool Stuff  621000.0  66488.0         10.3             9
+         Garden Tools  474848.0  59155.0         12.0            10
+                 Baby  402143.0  50948.0         12.3            11
+            Telephony  315750.0  49262.0         15.0            12
+                 Toys  474349.0  48222.0          9.9            13
+            Perfumery  388884.0  39345.0          9.7            14
+          Electronics  157340.0  36163.0         22.3            15
+
+-- Q4. Top 10 loss-making products
+                      product_id              category  line_items  revenue   profit
+fd0065af7f09af4b82a0ca8f3eed1852                  Auto          11  22000.0 -13768.0
+3db0b74faf0d26a6b252528659d6b849            Cool Stuff           4   9200.0  -6859.0
+d1c427060a0f73f6b889a5c7c61f2ac4 Computers Accessories         343  46488.0  -4455.0
+ada6a9116c85d8e56232e0a4265d7db9     Home Appliances 2           3   6921.0  -2993.0
+389d119b48cf3043d311335e499d9c6b          Garden Tools         392  20955.0  -2965.0
+53759a2ecddad2bb87a079a1f1519f73          Garden Tools         373  19782.0  -2873.0
+368c6c730842d78016ad823897a372db          Garden Tools         388  20518.0  -2841.0
+c4baedd846ed09b85f78a781b522f126          Garden Tools         149  14594.0  -2795.0
+3fbc0ef745950c7932d5f2a446189725         Health Beauty         150   9813.0  -2500.0
+154e7e31ebfa092203795c972e5804a6         Health Beauty         281   6169.0  -2379.0
+
+-- Q5. High-revenue products with thin margin (top 100 by revenue, margin < 15%) (DENSE_RANK)
+ rev_rank                       product_id              category  revenue  profit  margin_pct
+        1 bb50f2e236e5eea0100680137654686c         Health Beauty  62425.0  9189.0        14.7
+        3 d1c427060a0f73f6b889a5c7c61f2ac4 Computers Accessories  46488.0 -4455.0        -9.6
+        5 3dd2a17168ec895c781a9191c1e95ad7 Computers Accessories  40706.0  4069.0        10.0
+        6 99a4788cb24856965c36a24e339b6058        Bed Bath Table  40548.0    21.0         0.1
+        7 25c38557cf793876c5abdd5931f922db                  Baby  37920.0  4082.0        10.8
+        9 aca2eb7d00ea1a7b8ebd4e68314663af       Furniture Decor  37053.0  1881.0         5.1
+       10 53b36df67ebb7c41585e8d54d6772e08         Watches Gifts  36706.0  5016.0        13.7
+       11 d285360f29ac7fd97640bf0baef03de0         Watches Gifts  31565.0  3381.0        10.7
+       12 e0d64dcfaa3b6db5c54ca298ae101d05         Watches Gifts  31215.0  2219.0         7.1
+       13 7a10781637204d8d10485c71a6108a2e         Watches Gifts  29856.0  3393.0        11.4
+       14 f1c7f353075ce59d8a6f3cf58f419c9c        Bed Bath Table  29167.0  3849.0        13.2
+       16 f819f0c84a64f02d3a5606ca95edd272         Watches Gifts  26935.0  1684.0         6.3
+       17 422879e10f46682990de24d770e7f83d          Garden Tools  25753.0 -2218.0        -8.6
+       19 5a848e4ab52fd5445cdc07aab1c40e48               Unknown  23983.0  2859.0        11.9
+       20 a62e25e09e05e6faf31d90c6ec1aa3d1         Watches Gifts  23787.0  1831.0         7.7
+
+-- Q6. Top 10 loss-making customers
+              customer_unique_id customer_state  orders  revenue  profit
+5d0a2980b292d049061542014e8960bf             GO       1   4600.0 -3429.0
+055ec572ac7f3c7bdd04a183830ebe59             SP       2   4000.0 -2853.0
+6f00d356a4be20527662aaf12116baab             PE       1   2990.0 -2288.0
+1e7097be947ad5d0f7819bdc9d8d7d0e             RJ       1   2690.0 -1944.0
+13d9920a16127351540bcd95ad4643c8             RJ       1   2650.0 -1939.0
+60b2ec19b8c18082cdb5180106a97cb5             BA       1   2399.0 -1898.0
+7386ded430d6aeb715a0d087c38a2dfe             MG       1   2434.0 -1886.0
+8e07cbdbbb24328ece74135e2a81405b             RS       1   2350.0 -1750.0
+5eed8cf8c54bff340300c214ddc32db4             RS       1   2300.0 -1715.0
+f2a29b4d4c04184a9372bb7374d344ac             MG       1   2300.0 -1715.0
+
+-- Q7. Regional (customer state) leakage ranking
+customer_state   revenue   profit  margin_pct  leakage  freight_pct_of_revenue  leakage_rank
+            SP 5078993.0 473985.0        9.33 457050.0                    14.2             1
+            RJ 1778885.0  21896.0        1.23 270232.0                    17.2             2
+            MG 1554543.0 101454.0        6.53 148493.0                    17.4             3
+            RS  731309.0  27407.0        3.75  87083.0                    18.5             4
+            BA  498576.0  -6925.0       -1.39  82419.0                    20.1             5
+            PR  666758.0  41331.0        6.20  67306.0                    17.7             6
+            SC  508797.0  30043.0        5.90  51588.0                    17.6             7
+            PE  257377.0  -6355.0       -2.47  40346.0                    23.0             8
+            CE  221783.0  -8577.0       -3.87  40244.0                    21.8             9
+            GO  287623.0   9868.0        3.43  35729.0                    18.4            10
+            ES  269449.0   8784.0        3.26  33423.0                    18.5            11
+            DF  295452.0  17826.0        6.03  31403.0                    17.1            12
+            MA  117794.0 -14744.0      -12.52  29379.0                    26.8            13
+            PA  175637.0  -3423.0       -1.95  28548.0                    22.0            14
+            AL   78713.0  -5372.0       -6.83  17789.0                    20.2            15
+
+-- Q8. States with margin below the company average (subquery)
+customer_state   revenue  margin_pct
+            RR    7829.0      -14.38
+            MA  117794.0      -12.52
+            SE   56575.0       -9.60
+            AC   15284.0       -7.09
+            AL   78713.0       -6.83
+            PI   85170.0       -6.64
+            CE  221783.0       -3.87
+            RN   80046.0       -2.92
+            TO   48504.0       -2.91
+            PE  257377.0       -2.47
+            PA  175637.0       -1.95
+            BA  498576.0       -1.39
+            AM   22167.0        1.02
+            RJ 1778885.0        1.23
+            RO   45666.0        2.04
+
+-- Q9. Channel proxy: same-state vs cross-state fulfilment
+ route_type  line_items   revenue  freight_pct  margin_pct  leakage_pct
+ Same-state       40760 4150006.0         13.2       10.21         8.46
+Cross-state       71890 9129391.0         18.7        2.95        12.30
+
+-- Q10. Channel proxy: seller state profitability (DENSE_RANK, worst first)
+seller_state  line_items   revenue   profit  margin_pct  margin_rank
+          MA         405   36145.0  -5171.0      -14.31            1
+          ES         372   46784.0  -1680.0       -3.59            2
+          MT         145   16828.0   -560.0       -3.33            3
+          MG        8827  984487.0  12381.0        1.26            4
+          SP       80342 8539837.0 351384.0        4.11            5
+          DF         899   95489.0   4467.0        4.68            6
+          SC        4075  620119.0  30752.0        4.96            7
+          GO         520   64355.0   4615.0        7.17            8
+          PR        8671 1237118.0  91712.0        7.41            9
+          PE         448   89339.0   9246.0       10.35           10
+          RS        2199  372306.0  39813.0       10.69           11
+          RJ        4818  831824.0 102019.0       12.26           12
+          BA         643  278372.0  49162.0       17.66           13
+
+-- Q11. Which discount levels push margin below the 15% threshold
+discount_band  line_items    revenue  margin_pct  pct_line_items_below_15
+0 No discount       95454 11643914.0        8.17                     71.7
+   1 Up to 5%        4552   682795.0        8.50                     67.2
+      2 5-10%        3936   439537.0        0.89                     85.8
+     3 10-20%        3429   347165.0       -4.82                     97.7
+  4 Above 20%        5279   165986.0     -182.84                    100.0
+
+-- Q12. Customer segments and discount rate (one-time vs repeat vs loyal)
+     segment  customers  discount_rate_pct  margin_pct
+  Loyal (4+)         48               2.06        8.68
+    One-time      92507               3.29        5.29
+Repeat (2-3)       2865               4.10        3.77
+
+-- Q13. Product-level price anomalies (price >50% away from product list price)
+                        order_id                       product_id                  category   price  list_price  price_gap_pct
+c42ccab83afd0e50ca0d6089596b1b8b 5237739bb5fee495dbd337755a138660             Watches Gifts 1549.00      899.00           72.3
+24014414a15d7274cad8a2917fe1f040 77ccda894b672fe1214b0101d108d7f7             Health Beauty  672.00      418.00           60.8
+5cbaf38c240e82434c90a2148f37e94b 69455f41626a745aea9ee9164cb9eafd             Watches Gifts  337.69      139.00          142.9
+36e6b99ba54c4963136edbf31f33d781 d41d8cd98f00b204e9800998ecf8427e                      Auto   39.99      229.90          -82.6
+b00122d54463704c33f4768470c6db03 69455f41626a745aea9ee9164cb9eafd             Watches Gifts  299.99      139.00          115.8
+d796f0a0d15e6ade192b2a03afc755cf 657247f6f60543b93e3cc708a8e6329c       Luggage Accessories  399.99      248.99           60.6
+7d10fbd6419baac0e13a8e73d3c69e38 7ac0d3f8ac5b60c13d74b02b8cbb4623                  Pet Shop  239.90       94.90          152.8
+a76643614c2542c0a773b03b5b61b2c0 eea1d0033f3735c72d0501fdc2be0437          Office Furniture  129.99      269.99          -51.9
+ef118656ef537afb61840ff77a86a067 eea1d0033f3735c72d0501fdc2be0437          Office Furniture  129.99      269.99          -51.9
+3c220c0a8ae53cc9f24d007cb5b1a15d bc74f63361c15c1a5baa5b97ac432e62             Health Beauty  337.69      199.00           69.7
+e5d3ccacd4c9d00c28a3f328f72b254f bc74f63361c15c1a5baa5b97ac432e62             Health Beauty  337.69      199.00           69.7
+a86fc4e81f6a746ed3fe4495a242e3e4 7a10781637204d8d10485c71a6108a2e             Watches Gifts  349.90      214.00           63.5
+b10b1c5fd2464a235e121d6ff79280d1 1fa52682d6938b129312ef4cffac1711     Computers Accessories   59.90      190.90          -68.6
+f3cb950f0d57842dbbd55317ceaeaa71 a02d0123079f4ae96001ba2010d1a2df Construction Tools Lights  360.00      230.00           56.5
+2cf8310e7bc2b7b41f5179aab91407cc e256d05115f9eb3766f3ab752132a4e2     Computers Accessories  349.00      219.00           59.4
+
+-- Q14. Order-level anomalies: discount above 50% of gross value
+                        order_id   gross  discount  discount_pct   profit
+4df2b9c2c7b6eedea39ceb96eb54ad34 1689.00   1689.00         100.0 -1332.35
+c3fbba8f64cc6b2e99abc0e00d5ade2b 1375.00   1375.00         100.0  -987.83
+99bc429ddaa03f67e02a463a20c2379f 1199.00   1199.00         100.0  -864.40
+f7a8fae2d2d1ed95f1413db630a42dbe 1155.00   1155.00         100.0  -896.04
+714b93bc4ed81c32fbf579f30619f3eb 1149.00   1149.00         100.0  -838.66
+80423624a58421eb6e6d9fd07cafb406 1119.90   1119.90         100.0  -922.26
+985dbac2172bbf6b32bcca35da50d7a0  999.00    999.00         100.0  -738.01
+98c809bf2e8392fc389fdf8e2bfbb856  999.00    999.00         100.0  -739.20
+b66836a7408ecc382cdd4be702060220  969.00    969.00         100.0  -794.60
+9778dcf3aedc74a5185d423586877952  933.98    933.98         100.0  -674.04
+87aa53fa9466f416f97e7d380fbff012  899.00    899.00         100.0  -718.78
+8a6b47967a3590fb66d3b0a503b7e155  859.90    859.90         100.0  -616.11
+5cb890a68b91b6158d69257e4e2bc359  831.80    831.80         100.0  -621.90
+e4b6df3eb118302bd304c9d02ca19afd  799.80    799.80         100.0  -628.38
+70a272d1c01754b91a8709ae7efe27be  798.00    798.00         100.0  -766.60
+
+-- Q15. Refund impact on profit
+ profit_after_refunds  profit_before_refunds  refunds  refund_pct_of_revenue
+             692554.0              1412056.0 719502.0                   5.42
+
+-- Q16. Refunds by reason
+             return_reason  line_items  refunded
+Late delivery + low review        4651  624919.0
+      Canceled/Unavailable         549   94582.0
+
+-- Q17. Refund rate by category (categories with 200+ line_items)
+             category  line_items  refunded_line_items  refund_rate_pct  refund_value
+                Audio         364                 33.0             9.07        4650.0
+  Musical Instruments         680                 46.0             6.76       14586.0
+              Unknown        1627                103.0             6.33       10754.0
+    Home Appliances 2         238                 14.0             5.88        8586.0
+                 Baby        3065                175.0             5.71       28501.0
+          Electronics        2767                145.0             5.24       12435.0
+Furniture Living Room         503                 26.0             5.17        4921.0
+         Home Confort         434                 22.0             5.07        2657.0
+        Health Beauty        9670                484.0             5.01       57453.0
+                 Toys        4117                205.0             4.98       25003.0
+
+-- Q18. Shipping cost share of price vs margin
+freight_band  line_items   revenue  freight  margin_pct
+ 1 Under 10%       17486 5747364.0 311940.0       16.80
+    2 10-20%       31344 3957145.0 584380.0        7.94
+    3 20-30%       22609 1783498.0 450377.0       -3.26
+    4 30-50%       22267 1244038.0 483698.0      -17.65
+ 5 Above 50%       18944  547353.0 421515.0      -56.53
+
+-- Q19. Monthly revenue, margin and month-over-month change (LAG)
+     ym  revenue   profit  margin_pct  margin_change_pp  mom_revenue_pct
+2017-01 116709.0  12002.0       10.28               NaN              NaN
+2017-02 242466.0  22165.0        9.14             -1.14            107.8
+2017-03 365957.0  28552.0        7.80             -1.34             50.9
+2017-04 349400.0  19098.0        5.47             -2.34             -4.5
+2017-05 491377.0  44554.0        9.07              3.60             40.6
+2017-06 421730.0  22270.0        5.28             -3.79            -14.2
+2017-07 482475.0  23878.0        4.95             -0.33             14.4
+2017-08 560773.0  45161.0        8.05              3.10             16.2
+2017-09 608738.0  51370.0        8.44              0.39              8.6
+2017-10 647605.0  55765.0        8.61              0.17              6.4
+2017-11 993349.0  19760.0        1.99             -6.62             53.4
+2017-12 724752.0  24632.0        3.40              1.41            -27.0
+2018-01 923738.0  45500.0        4.93              1.53             27.5
+2018-02 823464.0  -9316.0       -1.13             -6.06            -10.9
+2018-03 960343.0 -36433.0       -3.79             -2.66             16.6
+
+-- Q20. Three least profitable categories in each state (ROW_NUMBER)
+customer_state                   category  revenue  profit  rn
+            AC                  Computers   1200.0  -990.0   1
+            AC              Watches Gifts    832.0  -325.0   2
+            AC                       Toys    235.0   -96.0   3
+            AL            Furniture Decor   3713.0 -1250.0   1
+            AL              Health Beauty  12260.0 -1185.0   2
+            AL Agro Industry And Commerce   1476.0 -1076.0   3
+            AM          Home Construction    753.0  -421.0   1
+            AM                  Telephony    766.0  -224.0   2
+            AM                       Food    150.0  -143.0   3
+            AP                 Housewares    490.0   -96.0   1
+            AP            Fixed Telephony    233.0   -79.0   2
+            AP                  Telephony    255.0   -52.0   3
+            BA            Furniture Decor  22724.0 -3401.0   1
+            BA             Bed Bath Table  24511.0 -3150.0   2
+            BA               Garden Tools  23598.0 -2463.0   3
