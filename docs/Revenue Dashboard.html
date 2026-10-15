@@ -1,0 +1,262 @@
+<title>Revenue Leakage Audit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: editorial hero with the waterfall as the thesis, a slim stat strip, then a two-column grid of audit panels. Dark ink ground, one bright number per section. */
+:root{
+  --bg:#f2f4fa; --bg2:#e9edf7; --surface:#ffffff; --ink:#111a33; --ink2:#434e6c; --muted:#6b7694; --line:#dde3f0; --grid:#e8ecf6;
+  --coral:#c8402f; --amber:#966700; --sky:#2c55c4; --mint:#0c7a53; --slate:#8d97b2; --onbar:#ffffff; --glow:rgba(44,85,196,.07);
+  --serif:"Fraunces",Georgia,"Times New Roman",serif; --sans:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a0f1f; --bg2:#0e1529; --surface:#121a2f; --ink:#eef1fb; --ink2:#aeb8d4; --muted:#7f8bad; --line:#233051; --grid:#1b2744;
+  --coral:#ff8d7c; --amber:#f2c46d; --sky:#7aa8ff; --mint:#5fd3a8; --slate:#5d6a8f; --onbar:#0a0f1f; --glow:rgba(122,168,255,.10); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a0f1f; --bg2:#0e1529; --surface:#121a2f; --ink:#eef1fb; --ink2:#aeb8d4; --muted:#7f8bad; --line:#233051; --grid:#1b2744;
+  --coral:#ff8d7c; --amber:#f2c46d; --sky:#7aa8ff; --mint:#5fd3a8; --slate:#5d6a8f; --onbar:#0a0f1f; --glow:rgba(122,168,255,.10); color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+.wrap{max-width:1140px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.hero{padding-block:44px 8px;display:flex;flex-direction:column;gap:18px;position:relative}
+.hero::before{content:"";position:absolute;inset:-20px -40px auto -40px;height:360px;background:radial-gradient(60% 100% at 20% 0%,var(--glow),transparent 70%);pointer-events:none}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);position:relative}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(34px,6vw,60px);line-height:1.04;letter-spacing:-.02em;margin:0;max-width:16ch;text-wrap:balance;position:relative}
+h1 em{font-style:italic;color:var(--coral)}
+.lede{color:var(--ink2);max-width:62ch;margin:0;font-size:15.5px;position:relative}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.stat{background:var(--surface);padding:16px 18px;min-width:0}
+.stat .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font-family:var(--serif);font-size:34px;line-height:1.1;margin-top:6px;font-variant-numeric:tabular-nums}
+.stat .n{font-size:12px;color:var(--ink2);margin-top:2px}
+.stat.hot .v{color:var(--coral)}
+.sec{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:14px 0 -6px;display:flex;align-items:center;gap:12px}
+.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:20px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px 22px 18px;min-width:0;display:flex;flex-direction:column;gap:12px}
+.panel.wide{grid-column:1/-1}
+h2{font-family:var(--serif);font-weight:600;font-size:20px;line-height:1.2;margin:0;text-wrap:balance;letter-spacing:-.005em}
+.find{margin:0;color:var(--ink2);max-width:72ch}
+.find b{color:var(--ink);font-weight:600}
+.note{font-size:12px;color:var(--muted);margin:0;max-width:72ch}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12px;color:var(--ink2)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.scroll{overflow-x:auto}
+.row{display:grid;grid-template-columns:minmax(74px,112px) 1fr auto;gap:12px;align-items:center;min-height:27px}
+.row .lab{font-size:12.5px;color:var(--ink2);min-width:0;overflow-wrap:anywhere}
+.row .val{font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums;text-align:right;min-width:64px}
+.track{position:relative;height:16px}
+.track::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--grid)}
+.bar{position:absolute;top:2px;height:12px;border-radius:0 3px 3px 0}
+.bar.neg{border-radius:3px 0 0 3px}
+.zero{position:absolute;top:-3px;bottom:-3px;width:1px;background:var(--ink2);opacity:.7}
+.tgt{position:absolute;top:-5px;bottom:-5px;border-left:2px dashed var(--ink)}
+.stack{display:flex;height:40px;gap:3px}
+.stack div{min-width:0;display:flex;align-items:center;padding-left:10px;font-family:var(--mono);font-size:12.5px;font-weight:500;color:var(--onbar);white-space:nowrap;border-radius:4px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th{font-family:var(--mono);font-weight:500;color:var(--muted);text-align:left;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:9px 8px;border-bottom:1px solid var(--grid)}
+td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+td.neg{color:var(--coral)}
+.months{display:flex;align-items:flex-end;gap:5px;height:110px;border-bottom:1px solid var(--ink2)}
+.months div{flex:1;background:var(--slate);min-width:0;border-radius:3px 3px 0 0}
+.mlab{display:flex;gap:5px;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.mlab span{flex:1;text-align:center;min-width:0;overflow:hidden}
+.recs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:22px}
+.rec{border-top:1px solid var(--ink2);padding-top:12px}
+.rec .if{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);margin:0 0 6px}
+.rec p{margin:0}
+svg text{fill:var(--muted);font-family:var(--mono);font-size:11px}
+svg text.big{fill:var(--ink);font-size:12px;font-weight:500}
+footer{color:var(--muted);font-size:12px;display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:18px;max-width:90ch}
+@media (prefers-reduced-motion:no-preference){.panel,.stat{transition:border-color .2s}.panel:hover{border-color:var(--slate)}}
+</style>
+
+<div class="wrap">
+<section class="hero">
+  <span class="eyebrow">Olist marketplace · Brazil · 2016–2018 · Amounts in BRL</span>
+  <h1>Sold R$13.3M. <em>Kept R$0.69M.</em></h1>
+  <p class="lede">An audit of 98,666 orders showing where revenue turns into profit and where it leaks away: refunds, discounts and freight, by state, route and product.</p>
+</section>
+
+<section class="strip" aria-label="Headline figures">
+  <div class="stat"><div class="k">Net revenue</div><div class="v">13.28M</div><div class="n">112,650 order lines</div></div>
+  <div class="stat"><div class="k">Gross profit</div><div class="v">692.6K</div><div class="n">after cost, freight, refunds</div></div>
+  <div class="stat hot"><div class="k">Gross margin</div><div class="v">5.22%</div><div class="n">against a 15% target</div></div>
+  <div class="stat hot"><div class="k">Revenue leakage</div><div class="v">1.52M</div><div class="n">11.1% of gross revenue</div></div>
+</section>
+
+<div class="sec">Where the money went</div>
+<section class="panel wide">
+  <h2>Of every R$100 of list-price revenue, about R$5 is left as profit</h2>
+  <div class="scroll"><svg id="wf" viewBox="0 0 920 330" style="min-width:640px;width:100%" role="img" aria-label="Waterfall from gross revenue 13.74M to profit 0.69M"></svg></div>
+  <p class="find">Product cost takes the largest share. Beyond that, <b>freight (R$2.25M) and refunds (R$0.72M)</b> each cost more than the whole profit.</p>
+  <p class="note">Product cost is modelled at 70% of list price. List price is each product's median selling price. Freight is the real freight value in the data.</p>
+</section>
+
+<div class="sec">The three leaks</div>
+<div class="grid">
+  <section class="panel">
+    <h2>Refunds are the largest leak</h2>
+    <div class="stack" id="stack" role="img" aria-label="Leakage split: refunds 47 percent, discounts 30 percent, excess freight 23 percent"></div>
+    <div class="legend" id="stackLegend"></div>
+    <p class="find">Leakage of R$1.52M is more than twice total profit, and refunds are <b>47%</b> of it. Without refunds, profit would be R$1.41M instead of R$0.69M.</p>
+    <p class="note">Refunds are modelled: cancelled or unavailable orders, plus late deliveries rated 1–2 stars. 87% of refund value comes from the late-delivery rule.</p>
+  </section>
+  <section class="panel">
+    <h2>Margin falls as freight takes a bigger share of the price</h2>
+    <div id="freight"></div>
+    <p class="find">Lines where freight is over 20% of item price are <b>57%</b> of lines but 27% of revenue, and every one of those bands loses money.</p>
+    <p class="note">Margin by freight share of item price. Dashed line is the 15% target.</p>
+  </section>
+  <section class="panel">
+    <h2>Discounted lines lose money above 10%</h2>
+    <div id="disc"></div>
+    <p class="find">Margin is close to zero at 5–10% discount and negative above it. The 7.7% of lines above 10% discount lose roughly half of total profit.</p>
+    <p class="note">Discount includes voucher-paid lines, which may be a payment method and not a price cut. Split vouchers before setting a cap. The last bar is cut off at −20%.</p>
+  </section>
+  <section class="panel">
+    <h2>Cross-state orders earn about a third of the margin</h2>
+    <div id="route"></div>
+    <p class="find">Cross-state fulfilment is <b>69%</b> of revenue. Its freight share is 18.7% against 13.2% for same-state orders, and leakage is 12.3% against 8.5%.</p>
+    <p class="note">Olist has no sales-channel field, so route type stands in for channel.</p>
+  </section>
+</div>
+
+<div class="sec">When and where</div>
+<div class="grid">
+  <section class="panel wide">
+    <h2>Margin fell during the November 2017 peak and turned negative in early 2018</h2>
+    <div class="scroll"><svg id="trend" viewBox="0 0 900 250" style="min-width:600px;width:100%" role="img" aria-label="Monthly gross margin percent, January 2017 to March 2018"></svg></div>
+    <div class="legend"><span><span class="sw" style="background:var(--sky)"></span>Gross margin %</span><span><span class="sw" style="background:var(--ink)"></span>15% target</span></div>
+    <p class="find">In Nov 2017 revenue rose 53% to R$993K while profit fell from R$55.8K to R$19.8K. Feb and Mar 2018 lost money (−1.1% and −3.8%).</p>
+    <div>
+      <div class="eyebrow" style="margin-bottom:8px">Net revenue by month (R$)</div>
+      <div class="months" id="months"></div>
+      <div class="mlab" id="mlab"></div>
+    </div>
+    <p class="note">The query output covers Jan 2017 to Mar 2018. Later months were not in the exported results.</p>
+  </section>
+  <section class="panel">
+    <h2>Twelve states have a negative margin</h2>
+    <div id="states"></div>
+    <p class="find">São Paulo (SP) earns <b>68%</b> of all profit. In the loss-making states freight is 20–27% of revenue, against 14% in SP.</p>
+    <p class="note">Gross margin by customer state. Dashed line is the 15% target.</p>
+  </section>
+  <section class="panel">
+    <h2>Largest losses by product</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>Product</th><th>Category</th><th class="num">Lines</th><th class="num">Revenue</th><th class="num">Profit</th></tr></thead>
+      <tbody id="prod"></tbody></table></div>
+    <p class="find">Four of the ten worst products are Garden Tools, each losing about R$2.8K over 150–390 lines. One Auto product loses R$13.8K on only 11 lines.</p>
+  </section>
+</div>
+
+<div class="sec">What to do next</div>
+<section class="panel">
+  <div class="recs">
+    <div class="rec"><p class="if">If late-delivery refunds are real</p><p>Fix delivery on long routes first. It is the largest modelled leak.</p></div>
+    <div class="rec"><p class="if">If freight over 20% of price holds in real data</p><p>Test minimum order values, freight surcharges or nearer-seller routing for low-priced items.</p></div>
+    <div class="rec"><p class="if">Before capping discounts</p><p>Separate vouchers from price cuts, then rerun the discount band analysis.</p></div>
+    <div class="rec"><p class="if">If rankings hold at 60% and 80% cost</p><p>Treat the state and category rankings as robust and act on the loss-making states.</p></div>
+  </div>
+</section>
+
+<footer>
+  <span><b>Assumptions.</b> Product cost is 70% of list price. Excess freight is freight above 30% of item price. Margin threshold is 15%.</span>
+  <span><b>Limits.</b> Cost, list price and refunds are modelled, not company records, so absolute profit is an estimate. Rankings are more reliable than levels.</span>
+  <span><b>Pipeline.</b> Python ETL, MySQL, 20 SQL audit queries, this summary.</span>
+</footer>
+</div>
+
+<script>
+const fmt=(n,d=0)=>n.toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:d});
+const pct=v=>(v<0?'−':'')+Math.abs(v).toFixed(1)+'%';
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* waterfall */
+(function(){
+  const steps=[
+    {l:'Gross revenue',v:13736429,t:'total',c:'--slate'},
+    {l:'Discounts',v:-457031,c:'--amber'},
+    {l:'Product cost',v:-9615432,c:'--slate'},
+    {l:'Freight',v:-2251910,c:'--sky'},
+    {l:'Refunds',v:-719502,c:'--coral'},
+    {l:'Gross profit',v:692554,t:'total',c:'--mint'}];
+  const W=920,H=330,L=16,R=16,T=34,B=44,max=14000000,pw=(W-L-R)/steps.length,bw=pw*.62;
+  const y=v=>T+(1-v/max)*(H-T-B);
+  let run=0,s=`<line x1="${L}" x2="${W-R}" y1="${y(0)}" y2="${y(0)}" stroke="var(--ink2)" stroke-width="1"/>`;
+  steps.forEach((st,i)=>{
+    const x=L+i*pw+(pw-bw)/2; let top,bot;
+    if(st.t==='total'){ if(i===0){run=st.v} top=st.v; bot=0; }
+    else { top=run; bot=run+st.v; run=bot; }
+    const yt=y(Math.max(top,bot)), yb=y(Math.min(top,bot)), h=Math.max(yb-yt,3);
+    s+=`<rect x="${x}" y="${yt}" width="${bw}" height="${h}" rx="3" fill="var(${st.c})"><title>${st.l}: R$${fmt(Math.abs(st.v))}</title></rect>`;
+    const lab=(st.v<0?'−':'')+(Math.abs(st.v)>=1e6?(Math.abs(st.v)/1e6).toFixed(2)+'M':(Math.abs(st.v)/1e3).toFixed(0)+'K');
+    s+=`<text class="big" x="${x+bw/2}" y="${yt-8}" text-anchor="middle">${lab}</text>`;
+    s+=`<text x="${x+bw/2}" y="${H-18}" text-anchor="middle">${st.l}</text>`;
+    if(i<steps.length-1){const ny=y(st.t==='total'?st.v:run);
+      s+=`<line x1="${x+bw}" x2="${x+pw}" y1="${ny}" y2="${ny}" stroke="var(--grid)" stroke-width="1" stroke-dasharray="3 3"/>`}
+  });
+  document.getElementById('wf').innerHTML=s;
+})();
+
+/* leakage split */
+const leak=[['Refunds (proxy)',719502,'--coral'],['Discounts',457031,'--amber'],['Excess freight',348462,'--sky']];
+const tot=leak.reduce((a,b)=>a+b[1],0);
+document.getElementById('stack').innerHTML=leak.map(l=>`<div style="flex:${l[1]};background:var(${l[2]})" title="${l[0]}: R$${fmt(l[1])}">${Math.round(100*l[1]/tot)}%</div>`).join('');
+document.getElementById('stackLegend').innerHTML=leak.map(l=>`<span><span class="sw" style="background:var(${l[2]})"></span>${l[0]} · R$${fmt(l[1]/1000)}K</span>`).join('');
+
+/* horizontal bars */
+function hbars(el,rows,min,max,opts={}){
+  const span=max-min, z=(0-min)/span*100;
+  el.innerHTML=rows.map(r=>{
+    const v=r.v, c=Math.max(min,Math.min(max,v)), neg=v<0;
+    const l=(Math.min(0,c)-min)/span*100, ww=Math.abs(c)/span*100, clip=(v<min)?' ◂':'';
+    return `<div class="row"><span class="lab">${r.l}</span>
+      <div class="track" title="${r.l}: ${pct(v)}"><div class="zero" style="left:${z}%"></div>
+      ${opts.target!=null?`<div class="tgt" style="left:${(opts.target-min)/span*100}%"></div>`:''}
+      <div class="bar ${neg?'neg':''}" style="left:${l}%;width:${ww}%;background:${r.c||(neg?'var(--coral)':'var(--mint)')}"></div></div>
+      <span class="val" style="color:${neg?'var(--coral)':'var(--ink)'}">${pct(v)}${clip}</span></div>`}).join('');
+}
+hbars(document.getElementById('freight'),[
+  {l:'Under 10%',v:16.80},{l:'10–20%',v:7.94},{l:'20–30%',v:-3.26},{l:'30–50%',v:-17.65},{l:'Over 50%',v:-56.53}],-30,20,{target:15});
+hbars(document.getElementById('route'),[
+  {l:'Same state',v:10.21,c:'var(--sky)'},{l:'Cross state',v:2.95,c:'var(--sky)'}],-5,16,{target:15});
+hbars(document.getElementById('disc'),[
+  {l:'No discount',v:8.17},{l:'Up to 5%',v:8.50},{l:'5–10%',v:0.89},{l:'10–20%',v:-4.82},{l:'Over 20%',v:-182.84}],-20,12);
+hbars(document.getElementById('states'),[
+  {l:'SP',v:9.33},{l:'RJ',v:1.23},{l:'BA',v:-1.39},{l:'PA',v:-1.95},{l:'PE',v:-2.47},{l:'TO',v:-2.91},{l:'RN',v:-2.92},
+  {l:'CE',v:-3.87},{l:'PI',v:-6.64},{l:'AL',v:-6.83},{l:'AC',v:-7.09},{l:'SE',v:-9.60},{l:'MA',v:-12.52},{l:'RR',v:-14.38}],-16,16,{target:15});
+
+/* monthly trend */
+const M=[['2017-01',116709,10.28],['2017-02',242466,9.14],['2017-03',365957,7.80],['2017-04',349400,5.47],['2017-05',491377,9.07],
+['2017-06',421730,5.28],['2017-07',482475,4.95],['2017-08',560773,8.05],['2017-09',608738,8.44],['2017-10',647605,8.61],
+['2017-11',993349,1.99],['2017-12',724752,3.40],['2018-01',923738,4.93],['2018-02',823464,-1.13],['2018-03',960343,-3.79]];
+(function(){
+  const W=900,H=250,L=44,R=20,T=14,B=30,ymin=-5,ymax=16;
+  const x=i=>L+i*(W-L-R)/(M.length-1), y=v=>T+(ymax-v)/(ymax-ymin)*(H-T-B);
+  let s='';
+  [-5,0,5,10,15].forEach(t=>{s+=`<line x1="${L}" x2="${W-R}" y1="${y(t)}" y2="${y(t)}" stroke="var(--${t===0?'ink2':'grid'})" stroke-width="1"/><text x="${L-8}" y="${y(t)+4}" text-anchor="end">${t}%</text>`});
+  s+=`<line x1="${L}" x2="${W-R}" y1="${y(15)}" y2="${y(15)}" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+  const pts=M.map((m,i)=>x(i)+','+y(m[2])).join('L');
+  s+=`<path d="M${x(0)},${y(0)}L${pts}L${x(M.length-1)},${y(0)}Z" fill="var(--sky)" opacity=".14"/>`;
+  s+=`<path d="M${pts}" fill="none" stroke="var(--sky)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  M.forEach((m,i)=>{const bad=m[2]<0;
+    s+=`<circle cx="${x(i)}" cy="${y(m[2])}" r="4" fill="${bad?'var(--coral)':'var(--sky)'}" stroke="var(--surface)" stroke-width="2"><title>${m[0]}: margin ${m[2].toFixed(2)}%</title></circle>`;
+    if(i%2===0||i===M.length-1) s+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle">${m[0].slice(2)}</text>`;});
+  s+=`<text class="big" x="${x(14)}" y="${y(-3.79)-10}" text-anchor="end" style="fill:var(--coral)">−3.8%</text>`;
+  s+=`<text class="big" x="${x(10)}" y="${y(1.99)+19}" text-anchor="middle" style="fill:var(--coral)">2.0%</text>`;
+  s+=`<text class="big" x="${x(0)+6}" y="${y(10.28)-10}">10.3%</text>`;
+  document.getElementById('trend').innerHTML=s;
+  const mx=Math.max(...M.map(m=>m[1]));
+  document.getElementById('months').innerHTML=M.map(m=>`<div style="height:${m[1]/mx*100}%" title="${m[0]}: R$${fmt(m[1])}"></div>`).join('');
+  document.getElementById('mlab').innerHTML=M.map(m=>`<span>${m[0].slice(5)}</span>`).join('');
+})();
+
+/* products */
+const P=[['fd0065af','Auto',11,22000,-13768],['3db0b74f','Cool Stuff',4,9200,-6859],['d1c42706','Computers Accessories',343,46488,-4455],
+['ada6a911','Home Appliances 2',3,6921,-2993],['389d119b','Garden Tools',392,20955,-2965],['53759a2e','Garden Tools',373,19782,-2873],
+['368c6c73','Garden Tools',388,20518,-2841],['c4baedd8','Garden Tools',149,14594,-2795]];
+document.getElementById('prod').innerHTML=P.map(p=>`<tr><td><span style="font-family:var(--mono)">${p[0]}…</span></td><td>${p[1]}</td><td class="num">${fmt(p[2])}</td><td class="num">${fmt(p[3])}</td><td class="num neg">−${fmt(Math.abs(p[4]))}</td></tr>`).join('');
+</script>
